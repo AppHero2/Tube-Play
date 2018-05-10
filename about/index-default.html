@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8' />
+    <meta name="description" content="Youtube video gallery plugin for jquery >= 1.9" />
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="../jquery.youtubevideogallery.js"></script>
+    <!-- <script src="http://www.youtube.com/player_api"></script> -->
+    <link rel="stylesheet" href="../youtube-video-gallery.css" type="text/css"/>
+    <!--[if lt IE 9]>
+    <link href="../youtube-video-gallery-legacy-ie.css" type="text/css" rel="stylesheet"/>
+    <![endif]-->
+    <title>Youtube video gallery for jquery</title>
+
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-firestore.js"></script>
+    <script>
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyC9_eGrZufcFVy0jS9Ytv-7RYvduZur91Q",
+        authDomain: "tube-dude.firebaseapp.com",
+        databaseURL: "https://tube-dude.firebaseio.com",
+        projectId: "tube-dude",
+        storageBucket: "tube-dude.appspot.com",
+        messagingSenderId: "67302929067"
+    };
+    firebase.initializeApp(config);
+
+    // This function takes the existing <iframe> (and YouTube player)
+        // with id 'player1' and adds an event listener for state changes.
+
+    function onYouTubeIframeAPIReady() {
+        console.log('onYouTubeIframeAPIReady');
+    }
+
+    function onPlayerStateChange(event) {
+        console.log("onPlayerStateChange----", event);
+        switch(event.data) {
+            case YT.PlayerState.PLAYING:
+            console.log('Video Played')
+            break;
+            case YT.PlayerState.PAUSED:
+            console.log('Video Paused')
+            break;
+            case YT.PlayerState.ENDED:
+            console.log('Video Finished')
+            break;
+            default:
+            return;
+        }
+    }
+            
+    </script>
+
+</head>
+<body>
+<h1>Tube Dude</h1>
+<div id="test">
+    <ul id="wrapper" class="youtube-videogallery">
+        <!-- <li><a href="http://www.youtube.com/watch?v=UCOC1YwNwZw">Call me gordie</a></li>
+        <li><a href="http://www.youtube.com/watch?v=CjgT8Af1kGc">Bad scooting</a></li>
+        <li><a href="http://www.youtube.com/watch?v=4psVnsYlBok">Good scooting</a></li>
+        <li><a href="http://www.youtube.com/watch?v=05Cgtg_N4eI">Knitting</a></li>
+        <li><a href="http://www.youtube.com/watch?v=xPr4g7o46DY">Sunrise yoga</a></li>
+        <li><a href="http://www.youtube.com/watch?v=pocEg6a6ZpM">YUI Roundtable</a></li>
+        <li><a href="http://www.youtube.com/watch?v=ishBOmjHoXE">Sporting moments</a></li>
+        <li><a href="http://www.youtube.com/watch?v=j_OyHUqIIOU">Big red balloon</a></li>
+        <li><a href="http://www.youtube.com/watch?v=0Yww2VhbFL8">Tango!</a></li> -->
+    </ul>
+</div>
+
+<script>
+    var tag = document.createElement('script');
+		//use https when loading script and youtube iframe src since if user is logging in youtube the youtube src will switch to https.
+		tag.src = "https://www.youtube.com/iframe_api";
+		var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);    
+        
+    $(document).ready(function(){
+        const settings = {timestampsInSnapshots: true};
+        var db = firebase.firestore();
+        db.settings(settings);
+        db.collection("VideoList").get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                const video = doc.data();
+                const tube_id = video.tube_id;
+                const title = video.description;
+
+                var galleryView = document.getElementById('wrapper');
+                var newChild = '<li><a href="' + 'http://www.youtube.com/watch?v=' + tube_id + '">' + title + '</a></li>';
+                galleryView.insertAdjacentHTML('beforeend', newChild);
+            });
+
+            $("ul.youtube-videogallery").youtubeVideoGallery( {
+                assetFolder:'../',
+                videoInitializer: initYoutubePlayer
+            } );
+            // initYoutubePlayer(document.getElementById('youtube-videogallery-iframe'));
+            
+        }).catch(err => {
+            console.log('err', err)
+        });
+    });
+
+    function initYoutubePlayer(divId, videoId) {
+        var player = new YT.Player(divId, {
+            // width: 600,
+            // height: 400,
+            videoId: videoId,
+            playerVars: {
+                color: 'white',
+                playlist: 'taJ60kskkns,FG0fTKAqZ5g'
+            },
+            events: {
+                onStateChange: onPlayerStateChange
+            }
+        });
+
+        return player;
+    }
+
+</script>
+</body>
+</html>
